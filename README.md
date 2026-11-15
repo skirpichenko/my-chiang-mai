@@ -14,11 +14,11 @@ Site: https://skirpichenko.github.io/my-chiang-mai/ (GitHub Pages, served from `
    - Format: Machine-readable JSON.
    - Period: all time.
 2. Copy the exported `result.json` into `work/result.json` in this folder.
-3. Open Claude Code in this folder and paste:
+3. Open Claude Code in this folder, or in a folder that holds it, and paste:
 
 ```
 Update the channel catalog from the new Telegram export in work/result.json.
-Follow CLAUDE.md, section "Updating the catalog after a new export", step by step.
+Follow the my-chiang-mai repo's CLAUDE.md, section "Updating the catalog after a new export", step by step.
 If more than 3 part files need extraction, you may run tools/extract_workflow.js as a workflow.
 Show me the build report (items before/after, names added and gone), then commit docs/catalog.json and push,
 and check that the live site serves the new catalog.
