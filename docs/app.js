@@ -93,10 +93,11 @@ function writeHash() {
 
 const isPast = it => it.k === 'event' && !it.r && (!it.ed || it.ed < TODAY);
 
-function matches(it, tokens, withCat) {
+// `ignore` leaves out one filter, to count what each choice in its list would show: 'area', or 'city' (with the area).
+function matches(it, tokens, withCat, ignore) {
   if (withCat && state.cat && it.c !== state.cat) return false;
-  if (state.city && it.city !== state.city) return false;
-  if (state.area && it.z !== state.area) return false;
+  if (ignore !== 'city' && state.city && it.city !== state.city) return false;
+  if (!ignore && state.area && it.z !== state.area) return false;
   if (it.k === 'event') {
     if (!state.past && isPast(it)) return false;
     if (!tokens.length && state.cat !== 'events') return false;
@@ -125,6 +126,13 @@ function apply() {
   let total = 0;
   for (const it of items) if (matches(it, tokens, false)) { counts[it.c] = (counts[it.c] || 0) + 1; total++; }
   view = items.filter(it => matches(it, tokens, true));
+  const byArea = {}, byCity = {};
+  for (const it of items) {
+    if (it.z && matches(it, tokens, true, 'area')) byArea[it.z] = (byArea[it.z] || 0) + 1;
+    if (matches(it, tokens, true, 'city')) byCity[it.city] = (byCity[it.city] || 0) + 1;
+  }
+  countOptions($('area'), byArea, id => T.areas[id]);
+  countOptions($('city'), byCity, c => c);
   if (state.cat === 'events' && !tokens.length) {
     // Dated upcoming events first (soonest on top), then regular ones, then past (latest on top).
     const rank = it => it.ed && it.ed >= TODAY ? 0 : it.r ? 1 : 2;
@@ -147,6 +155,16 @@ function apply() {
   }
   more();
   writeHash();
+}
+
+// The counts in the city and area lists follow the other filters, like the category chips.
+function countOptions(sel, counts, name) {
+  for (const o of sel.options) {
+    if (!o.value) continue;
+    const n = counts[o.value] || 0;
+    o.text = `${name(o.value)} (${n})`;
+    o.disabled = !n && o.value !== sel.value;
+  }
 }
 
 function renderChips(counts, total, searching) {
