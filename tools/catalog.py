@@ -213,6 +213,21 @@ def http(url):
     return isinstance(url, str) and re.match(r'https?://', url)
 
 
+TRACKING = re.compile(r'(utm_\w+|fbclid|gclid|igsh|igshid|mibextid)$', re.I)
+
+
+def clean_url(url):
+    """The link without tracking parameters (utm_*, fbclid, igsh, mibextid; g_st on short Maps links)."""
+    if not http(url) or '?' not in url:
+        return url
+    base, _, rest = url.partition('?')
+    query, hash_, frag = rest.partition('#')
+    short_maps = re.match(r'https?://(maps\.app\.goo\.gl|goo\.gl/maps)/', base)
+    kept = [p for p in query.split('&') if p
+            and not TRACKING.match(p.split('=', 1)[0]) and not (short_maps and p.split('=', 1)[0] == 'g_st')]
+    return base + ('?' + '&'.join(kept) if kept else '') + hash_ + frag
+
+
 def cmd_build(with_contacts, force):
     todo = pending()
     if todo and not force:
@@ -251,8 +266,8 @@ def cmd_build(with_contacts, force):
             if not e['post_ids']:
                 bad['superseded by a later update' if ids else 'no valid post id'] += 1
                 continue
-            if not http(e.get('maps_url')):
-                e['maps_url'] = None
+            e['maps_url'] = clean_url(e.get('maps_url')) if http(e.get('maps_url')) else None
+            e['links'] = [clean_url(u) for u in e.get('links') or []]
             raw.append(e)
 
     groups = collections.OrderedDict()
