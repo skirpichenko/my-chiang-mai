@@ -74,7 +74,7 @@ h1 { font-size: 20px; margin: 0; letter-spacing: -0.01em; }
   border: 1px solid var(--line); color: var(--link); background: none; cursor: pointer;
 }
 .btn.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
-.btn[aria-expanded="true"] { background: var(--surface); }
+.btn[aria-expanded="true"] { background: var(--surface); color: var(--link); border-color: var(--line); }   /* an open post's button turns secondary */
 .embed { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
 .embed iframe { display: block; width: 100%; height: 360px; border: 0; background: transparent; }
 .embed .row { display: flex; flex-wrap: wrap; gap: 8px; }

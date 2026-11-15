@@ -197,7 +197,7 @@ window.addEventListener('message', e => {
 function postButton(it, box) {
   const label = it.ids.length > 1 ? T.postMore(it.ids.length - 1) : T.post;
   const b = document.createElement('button');
-  b.type = 'button'; b.className = it.m ? 'btn' : 'btn primary'; b.textContent = label;
+  b.type = 'button'; b.className = 'btn primary'; b.textContent = label;
   b.setAttribute('aria-expanded', 'false');
   const toggle = () => {
     if (!box.childElementCount) {
@@ -270,8 +270,10 @@ function card(it) {
   }
   const act = document.createElement('div'); act.className = 'actions';
   const box = document.createElement('div'); box.className = 'embed'; box.hidden = true;
-  if (it.m) act.append(anchor(it.m, T.map, true));
-  if (T.channel && it.ids && it.ids.length) act.append(postButton(it, box));
+  // The post is the main action; the map is the main one only for an item without a post.
+  const hasPost = !!(T.channel && it.ids && it.ids.length);
+  if (hasPost) act.append(postButton(it, box));
+  if (it.m) act.append(anchor(it.m, T.map, !hasPost));
   for (const u of it.l || []) act.append(anchor(u, linkLabel(u)));
   if (act.children.length) el.append(act);
   el.append(box);
