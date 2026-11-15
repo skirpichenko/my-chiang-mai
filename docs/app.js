@@ -199,11 +199,15 @@ function postButton(it, box) {
   const b = document.createElement('button');
   b.type = 'button'; b.className = it.m ? 'btn' : 'btn primary'; b.textContent = label;
   b.setAttribute('aria-expanded', 'false');
-  b.onclick = () => {
+  const toggle = () => {
     if (!box.childElementCount) {
       box.append(postFrame(it.ids[0]));
       const row = document.createElement('div'); row.className = 'row';
-      row.append(anchor(postUrl(it.ids[0]), T.openTg));
+      // A long post pushes the top button off a phone screen, so the post gets its own Hide button below it.
+      const hide = document.createElement('button');
+      hide.type = 'button'; hide.className = 'btn'; hide.textContent = T.hide;
+      hide.onclick = toggle;
+      row.append(hide, anchor(postUrl(it.ids[0]), T.openTg));
       const rest = it.ids.slice(1);
       if (rest.length) {
         const m = document.createElement('button');
@@ -217,7 +221,13 @@ function postButton(it, box) {
     box.hidden = !open;
     b.textContent = open ? T.hide : label;
     b.setAttribute('aria-expanded', String(open));
+    if (!open) {
+      // After hiding, bring the card back into view instead of leaving the reader further down the list.
+      const card = b.closest('.card');
+      if (card && card.getBoundingClientRect().top < 0) card.scrollIntoView({ block: 'start' });
+    }
   };
+  b.onclick = toggle;
   return b;
 }
 
