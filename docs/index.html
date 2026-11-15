@@ -6,7 +6,7 @@
 <title>Мой Чиангмай — каталог</title>
 <meta name="description" content="Каталог мест, услуг и полезной информации о Чиангмае по материалам канала «Мой Чиангмай».">
 <link rel="alternate" hreflang="en" href="en/">
-<link rel="stylesheet" href="app.css?v=6">
+<link rel="stylesheet" href="app.css?v=7">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -16,9 +16,10 @@
       <h1>Мой Чиангмай — каталог</h1>
       <a class="lang" id="lang" href="en/" hreflang="en" lang="en">English</a>
     </div>
-    <div class="search">
+    <div class="search" id="search">
       <input id="q" type="search" placeholder="Поиск: стоматолог, декаф, с детьми…" autocomplete="off" aria-label="Поиск по каталогу">
       <select id="city" aria-label="Город"></select>
+      <select id="area" aria-label="Район" hidden></select>
     </div>
     <div class="chips" id="chips" role="group" aria-label="Рубрики"></div>
   </div>
@@ -34,6 +35,6 @@
 </main>
 <noscript><p class="wrap">Для работы каталога нужен JavaScript.</p></noscript>
 <script>window.SITE = { lang: 'ru', data: 'catalog.json', other: 'en/' };</script>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>

@@ -41,6 +41,13 @@ h1 { font-size: 20px; margin: 0; letter-spacing: -0.01em; }
   border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 0;
 }
 .search input { flex: 1; }
+.search #area { flex-basis: 210px; }   /* area names are longer than city names */
+/* with the area list on a phone: the search box on its own line, the two lists sharing the next one */
+@media (max-width: 560px) {
+  .search.two { flex-wrap: wrap; }
+  .search.two input { flex: 1 1 100%; }
+  .search.two select, .search.two #area { flex: 1 1 0; }
+}
 .search select {
   flex: 0 1 150px; padding-right: 34px; -webkit-appearance: none; appearance: none; cursor: pointer;
   /* our own chevron in the hint colour instead of each platform's arrow */

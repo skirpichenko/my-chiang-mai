@@ -4,6 +4,7 @@
   python3 tools/catalog.py diff                      changed/new posts of work/result.json -> work/inc/<tag>/p*.txt
   python3 tools/catalog.py pending                   JSON {"root", "pairs": [[part.txt, part.jsonl], ...]} still to extract
   python3 tools/catalog.py build [--contacts] [--force]   merge all extracted entries -> docs/catalog.json
+                                                     (with each item's city region, see tools/geo.py)
   python3 tools/catalog.py split                     full re-split into work/chunks (full rebuild only)
 
 Contacts (phones, handles, emails) are left out of catalog.json unless --contacts is given.
@@ -341,6 +342,10 @@ def cmd_build(with_contacts, force):
         item['id'] = i
 
     old = load_json(CATALOG)['items'] if os.path.exists(CATALOG) else []
+    # City regions (tools/geo.py): each item's `z`, from its map link's address, the district borders or its area text.
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import geo
+    geo.report(catalog)
     save_json(CATALOG, {'built_from_posts_until': max(post_date.values()), 'items': catalog})
 
     names = lambda items: {(x['k'], x['n']) for x in items}

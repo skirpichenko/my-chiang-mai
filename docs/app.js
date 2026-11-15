@@ -17,6 +17,9 @@ const STRINGS = {
       work_study: 'Работа и учёба', leisure: 'Досуг и природа', music_venues: 'Живая музыка',
       events: 'Афиша', travel: 'Поездки', info: 'Полезное', community: 'Сообщества',
     },
+    // City regions, in the order of tools/regions.json; items carry the id as `z`.
+    areas: { 'old-city': 'Старый город', 'nimman': 'Нимман и Сутхеп', 'santitham': 'Сантитам и Чанг Пхыак', 'riverside': 'Тха Пае и река', 'south': 'Юг города', 'mae-hia': 'Мае Хиа', 'northeast': 'Северо-восток города', 'hang-dong': 'Ханг Донг', 'mae-rim': 'Мае Рим', 'san-sai': 'Сан Сай и Дой Сакет', 'east': 'Сан Кампхэнг, Сарапхи, Мае Он', 'further': 'Дальше от города' },
+    allAreas: 'Все районы', osm: 'Районы: © участники OpenStreetMap.',
     all: 'Все', allCities: 'Все города', found: n => `Найдено: ${n}`,
     empty: 'Ничего не найдено. Попробуйте другое слово или уберите фильтры.',
     link: 'Ссылка', date: 'Дата', regular: 'регулярно', hours: 'Время', price: 'Цена', contacts: 'Контакты',
@@ -37,6 +40,8 @@ const STRINGS = {
       work_study: 'Work & study', leisure: 'Leisure & nature', music_venues: 'Live music',
       events: 'Events', travel: 'Trips', info: 'Good to know', community: 'Communities',
     },
+    areas: { 'old-city': 'Old City', 'nimman': 'Nimman & Suthep', 'santitham': 'Santitham & Chang Phueak', 'riverside': 'Tha Phae & riverside', 'south': 'South of the city', 'mae-hia': 'Mae Hia', 'northeast': 'North-east of the city', 'hang-dong': 'Hang Dong', 'mae-rim': 'Mae Rim', 'san-sai': 'San Sai & Doi Saket', 'east': 'San Kamphaeng, Saraphi, Mae On', 'further': 'Further out' },
+    allAreas: 'All areas', osm: 'Areas: © OpenStreetMap contributors.',
     all: 'All', allCities: 'All cities', found: n => `Found: ${n}`,
     empty: 'Nothing found. Try another word or clear the filters.',
     link: 'Link', date: 'Date', regular: 'regular', hours: 'Hours', price: 'Price', contacts: 'Contacts',
@@ -61,24 +66,27 @@ const now = new Date();
 const TODAY = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 
 let items = [], view = [], shown = 0;
-const state = { q: '', cat: '', city: '', past: false };
+const state = { q: '', cat: '', city: '', area: '', past: false };
 
 function readHash() {
   const p = new URLSearchParams(location.hash.slice(1));
   state.q = p.get('q') || ''; state.cat = CATS[p.get('c')] ? p.get('c') : '';
   state.city = p.get('city') || ''; state.past = p.get('past') === '1';
+  state.area = T.areas[p.get('area')] ? p.get('area') : '';
 }
 function writeHash() {
   const p = new URLSearchParams();
   if (state.q) p.set('q', state.q);
   if (state.cat) p.set('c', state.cat);
   if (state.city) p.set('city', state.city);
+  if (state.area) p.set('area', state.area);
   if (state.past) p.set('past', '1');
   const h = p.toString();
   history.replaceState(null, '', h ? '#' + h : location.pathname + location.search);
-  // The other language keeps the category and the past-events switch; words and city names differ.
+  // The other language keeps the category, the area and the past-events switch; words and city names differ.
   const o = new URLSearchParams();
   if (state.cat) o.set('c', state.cat);
+  if (state.area) o.set('area', state.area);
   if (state.past) o.set('past', '1');
   $('lang').href = SITE.other + (o.toString() ? '#' + o : '');
 }
@@ -88,6 +96,7 @@ const isPast = it => it.k === 'event' && !it.r && (!it.ed || it.ed < TODAY);
 function matches(it, tokens, withCat) {
   if (withCat && state.cat && it.c !== state.cat) return false;
   if (state.city && it.city !== state.city) return false;
+  if (state.area && it.z !== state.area) return false;
   if (it.k === 'event') {
     if (!state.past && isPast(it)) return false;
     if (!tokens.length && state.cat !== 'events') return false;
@@ -100,7 +109,17 @@ function score(it, tokens) {
   return s;
 }
 
+// The area filter belongs to the home city: it shows with the home city or with all cities.
+function syncArea() {
+  const on = !state.city || state.city === T.home;
+  if (!on) state.area = '';
+  $('area').hidden = !on;
+  $('search').classList.toggle('two', on);
+  $('area').value = state.area;
+}
+
 function apply() {
+  syncArea();
   const tokens = norm(state.q).split(/\s+/).filter(Boolean);
   const counts = {};
   let total = 0;
@@ -238,7 +257,8 @@ function card(it) {
   el.className = 'card';
   const h = document.createElement('h2'); h.textContent = it.n; el.append(h);
   const sub = document.createElement('div'); sub.className = 'sub';
-  sub.textContent = [it.s || CATS[it.c], it.a, it.city !== T.home || !it.a ? it.city : null].filter(Boolean).join(' · ');
+  const place = it.a || T.areas[it.z];
+  sub.textContent = [it.s || CATS[it.c], place, it.city !== T.home || !place ? it.city : null].filter(Boolean).join(' · ');
   el.append(sub);
   if (it.d) { const p = document.createElement('p'); p.textContent = it.d; el.append(p); }
   const facts = [];
@@ -295,6 +315,7 @@ new IntersectionObserver(es => { if (es[0].isIntersecting && shown < view.length
 let timer;
 $('q').addEventListener('input', e => { clearTimeout(timer); timer = setTimeout(() => { state.q = e.target.value.trim(); apply(); }, 150); });
 $('city').addEventListener('change', e => { state.city = e.target.value; apply(); });
+$('area').addEventListener('change', e => { state.area = e.target.value; apply(); });
 $('past').addEventListener('change', e => { state.past = e.target.checked; apply(); });
 
 window.addEventListener('hashchange', () => {
@@ -306,13 +327,17 @@ window.addEventListener('hashchange', () => {
 
 fetch(SITE.data).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(data => {
   items = data.items;
-  const cities = {};
+  const cities = {}, areas = {};
   for (const it of items) {
     it._name = norm(it.n);
     it._key = norm([it.s, (it.t || []).join(' '), CATS[it.c]].join(' '));
-    it._hay = [it._name, it._key, norm(it.d), norm(it.a), norm(it.city)].join(' ');
+    it._hay = [it._name, it._key, norm(it.d), norm(it.a), norm(it.city), norm(T.areas[it.z])].join(' ');
     cities[it.city] = (cities[it.city] || 0) + 1;
+    if (it.z) areas[it.z] = (areas[it.z] || 0) + 1;
   }
+  const asel = $('area');
+  asel.append(new Option(T.allAreas, ''));
+  for (const [id, name] of Object.entries(T.areas)) if (areas[id]) asel.append(new Option(`${name} (${areas[id]})`, id));
   const sel = $('city');
   sel.append(new Option(T.allCities, ''));
   Object.entries(cities).filter(([, n]) => n >= 5).sort((a, b) => b[1] - a[1])
@@ -320,7 +345,7 @@ fetch(SITE.data).then(r => { if (!r.ok) throw new Error(r.status); return r.json
   readHash();
   $('q').value = state.q; $('past').checked = state.past;
   sel.value = state.city; if (sel.value !== state.city) state.city = '';
-  $('foot').textContent = T.foot(items.length, T.fmtDate(data.built_from_posts_until));
+  $('foot').textContent = T.foot(items.length, T.fmtDate(data.built_from_posts_until)) + ' ' + T.osm;
   apply();
 }).catch(() => {
   const e = document.createElement('div'); e.className = 'empty';
