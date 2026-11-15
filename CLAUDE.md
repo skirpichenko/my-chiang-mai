@@ -37,7 +37,7 @@ A searchable catalog of the public Telegram channel «Мой Чиангмай» 
    - Path: channel → ⋮ → Export chat history.
    - Settings: untick all media, format "Machine-readable JSON", period from the very first message.
    - The period must be all time, otherwise edited old posts are missed.
-   - The exported `result.json` goes to `work/result.json`, overwriting the old one.
+   - Don't copy the exported `result.json` over `work/result.json` by hand: the private channel-tools repo puts it in place (`sync_channel.py run --from <export>`), keeping posts changed only by its hashtag fix as they were. Without that repo, copy it over `work/result.json`.
 2. `python3 -I tools/catalog.py diff`
    - It compares the export with `work/state.json`. Changed and new posts go to `work/inc/<tag>/`, together with their reply parent and direct replies for context. It also archives the export and updates `state.json`.
    - If it prints "no changes", stop.
