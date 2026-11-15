@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Мой Чиангмай — каталог</title>
+<meta name="description" content="Каталог мест, услуг и полезной информации о Чиангмае по материалам канала «Мой Чиангмай».">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root {
+  --bg: var(--tg-theme-bg-color, #ffffff);
+  --surface: var(--tg-theme-secondary-bg-color, #f3f4f1);
+  --text: var(--tg-theme-text-color, #1b1d1a);
+  --hint: var(--tg-theme-hint-color, #6c726a);
+  --link: var(--tg-theme-link-color, #1f6f54);
+  --accent: var(--tg-theme-button-color, #1f6f54);
+  --on-accent: var(--tg-theme-button-text-color, #ffffff);
+  --line: color-mix(in srgb, var(--text) 12%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: var(--tg-theme-bg-color, #151714);
+    --surface: var(--tg-theme-secondary-bg-color, #20231f);
+    --text: var(--tg-theme-text-color, #ecefe9);
+    --hint: var(--tg-theme-hint-color, #9aa197);
+    --link: var(--tg-theme-link-color, #6fcfa9);
+    --accent: var(--tg-theme-button-color, #2f8f6e);
+    --on-accent: var(--tg-theme-button-text-color, #ffffff);
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+header.top {
+  position: sticky; top: 0; z-index: 5; background: var(--bg);
+  border-bottom: 1px solid var(--line); padding: 12px 0 8px;
+}
+h1 { font-size: 20px; margin: 0 0 10px; letter-spacing: -0.01em; }
+.search { display: flex; gap: 8px; }
+.search input, .search select {
+  font: inherit; color: var(--text); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 0;
+}
+.search input { flex: 1; }
+.search select { flex: 0 1 150px; }
+.search input:focus, .search select:focus, button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px;
+}
+.chips {
+  display: flex; gap: 6px; overflow-x: auto; padding: 10px 16px 4px; margin: 0 -16px;
+  scrollbar-width: none;
+}
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none; font: inherit; font-size: 14px; color: var(--text); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; white-space: nowrap;
+}
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.chip small { opacity: .7; margin-left: 4px; font-variant-numeric: tabular-nums; }
+.meta { display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  color: var(--hint); font-size: 14px; padding: 12px 0 4px; }
+.meta label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.card { border-bottom: 1px solid var(--line); padding: 14px 0; }
+.card h2 { font-size: 17px; margin: 0; line-height: 1.3; overflow-wrap: anywhere; }
+.sub { color: var(--hint); font-size: 14px; margin-top: 2px; }
+.card p { margin: 8px 0 0; overflow-wrap: anywhere; }
+.facts { margin: 8px 0 0; padding: 0; list-style: none; font-size: 14px; color: var(--hint); }
+.facts b { color: var(--text); font-weight: 600; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tag { font: inherit; font-size: 13px; color: var(--hint); background: none; border: 0; padding: 0; cursor: pointer; }
+.tag::before { content: "#"; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.btn {
+  display: inline-block; font-size: 14px; text-decoration: none; border-radius: 8px; padding: 7px 12px;
+  border: 1px solid var(--line); color: var(--link); background: none;
+}
+.btn.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.empty, .foot { color: var(--hint); font-size: 14px; padding: 24px 0; text-align: center; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <h1>Мой Чиангмай — каталог</h1>
+    <div class="search">
+      <input id="q" type="search" placeholder="Поиск: стоматолог, декаф, с детьми…" autocomplete="off" aria-label="Поиск по каталогу">
+      <select id="city" aria-label="Город"></select>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Рубрики"></div>
+  </div>
+</header>
+<main class="wrap">
+  <div class="meta">
+    <span id="count" aria-live="polite"></span>
+    <label id="pastWrap" hidden><input type="checkbox" id="past"> прошедшие события</label>
+  </div>
+  <div id="list"></div>
+  <div id="more"></div>
+  <div class="foot" id="foot"></div>
+</main>
+<noscript><p class="wrap">Для работы каталога нужен JavaScript.</p></noscript>
+<script>
+// Username of the public channel without "@". Leave empty to hide links to source posts.
+const CHANNEL = 'my_chiangmai';
+const PAGE = 30;
+const CATS = {
+  food_cafe: 'Кафе и кофейни', food_restaurant: 'Рестораны', food_bar: 'Бары',
+  food_bakery: 'Пекарни и десерты', food_products: 'Продукты', shopping_market: 'Рынки',
+  shopping_store: 'Магазины', kids: 'Детям', health: 'Здоровье', beauty_relax: 'Массаж и спа',
+  sport_practice: 'Спорт и йога', services: 'Услуги', housing: 'Жильё и отели',
+  work_study: 'Работа и учёба', leisure: 'Досуг и природа', music_venues: 'Живая музыка',
+  events: 'Афиша', travel: 'Поездки', info: 'Полезное', community: 'Сообщества',
+};
+const tg = window.Telegram && window.Telegram.WebApp;
+const inTelegram = !!(tg && tg.initData);
+if (inTelegram) { tg.ready(); tg.expand(); }
+
+const $ = id => document.getElementById(id);
+const norm = s => (s || '').toLowerCase().replace(/ё/g, 'е');
+const pad = n => String(n).padStart(2, '0');
+const now = new Date();
+const TODAY = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+const fmtDate = iso => { const [y, m, d] = iso.split('-'); return `${d}.${m}.${y}`; };
+
+let items = [], view = [], shown = 0;
+const state = { q: '', cat: '', city: '', past: false };
+
+function readHash() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  state.q = p.get('q') || ''; state.cat = CATS[p.get('c')] ? p.get('c') : '';
+  state.city = p.get('city') || ''; state.past = p.get('past') === '1';
+}
+function writeHash() {
+  const p = new URLSearchParams();
+  if (state.q) p.set('q', state.q);
+  if (state.cat) p.set('c', state.cat);
+  if (state.city) p.set('city', state.city);
+  if (state.past) p.set('past', '1');
+  const h = p.toString();
+  history.replaceState(null, '', h ? '#' + h : location.pathname + location.search);
+}
+
+const isPast = it => it.k === 'event' && !it.r && (!it.ed || it.ed < TODAY);
+
+function matches(it, tokens, withCat) {
+  if (withCat && state.cat && it.c !== state.cat) return false;
+  if (state.city && it.city !== state.city) return false;
+  if (it.k === 'event') {
+    if (!state.past && isPast(it)) return false;
+    if (!tokens.length && state.cat !== 'events') return false;
+  }
+  return tokens.every(t => it._hay.includes(t));
+}
+function score(it, tokens) {
+  let s = 0;
+  for (const t of tokens) s += it._name.includes(t) ? 3 : it._key.includes(t) ? 2 : 1;
+  return s;
+}
+
+function apply() {
+  const tokens = norm(state.q).split(/\s+/).filter(Boolean);
+  const counts = {};
+  let total = 0;
+  for (const it of items) if (matches(it, tokens, false)) { counts[it.c] = (counts[it.c] || 0) + 1; total++; }
+  view = items.filter(it => matches(it, tokens, true));
+  if (state.cat === 'events' && !tokens.length) {
+    // Dated upcoming events first (soonest on top), then regular ones, then past (latest on top).
+    const rank = it => it.ed && it.ed >= TODAY ? 0 : it.r ? 1 : 2;
+    view.sort((a, b) => rank(a) - rank(b) || (rank(a) === 0
+      ? a.ed.localeCompare(b.ed)
+      : rank(a) === 1 ? b.last.localeCompare(a.last) : (b.ed || '').localeCompare(a.ed || '')));
+  } else if (tokens.length) {
+    view.sort((a, b) => score(b, tokens) - score(a, tokens) || b.last.localeCompare(a.last));
+  }
+  renderChips(counts, total, tokens.length > 0);
+  $('pastWrap').hidden = !(state.cat === 'events' || tokens.length);
+  $('count').textContent = view.length ? `Найдено: ${view.length}` : '';
+  $('list').replaceChildren();
+  shown = 0;
+  if (!view.length) {
+    const e = document.createElement('div');
+    e.className = 'empty';
+    e.textContent = 'Ничего не найдено. Попробуйте другое слово или уберите фильтры.';
+    $('list').append(e);
+  }
+  more();
+  writeHash();
+}
+
+function renderChips(counts, total, searching) {
+  const box = $('chips');
+  box.replaceChildren();
+  const add = (key, label, n) => {
+    const b = document.createElement('button');
+    b.className = 'chip'; b.type = 'button';
+    b.setAttribute('aria-pressed', String(state.cat === key));
+    b.append(label);
+    const c = document.createElement('small'); c.textContent = n; b.append(c);
+    b.onclick = () => { state.cat = state.cat === key ? '' : key; apply(); window.scrollTo(0, 0); };
+    box.append(b);
+  };
+  add('', 'Все', total);
+  for (const key of Object.keys(CATS)) {
+    const n = counts[key] || 0;
+    if (n || state.cat === key || (key === 'events' && !searching)) add(key, CATS[key], n || '');
+  }
+}
+
+function linkLabel(url) {
+  try {
+    const h = new URL(url).hostname.replace(/^www\./, '');
+    if (h.includes('instagram.')) return 'Instagram';
+    if (h.includes('facebook.') || h === 'fb.com' || h === 'fb.me') return 'Facebook';
+    if (h === 't.me') return 'Telegram';
+    if (h.includes('line.me') || h === 'lin.ee') return 'LINE';
+    return h;
+  } catch (e) { return 'Ссылка'; }
+}
+function anchor(url, label, primary) {
+  const a = document.createElement('a');
+  a.className = primary ? 'btn primary' : 'btn';
+  a.href = url; a.target = '_blank'; a.rel = 'noopener';
+  a.textContent = label;
+  if (inTelegram) a.onclick = ev => {
+    ev.preventDefault();
+    if (/^https:\/\/t\.me\//.test(url)) tg.openTelegramLink(url); else tg.openLink(url);
+  };
+  return a;
+}
+function contact(c) {
+  if (/^@[A-Za-z0-9_]{4,}$/.test(c)) return anchor('https://t.me/' + c.slice(1), c);
+  const s = document.createElement('span'); s.textContent = c; return s;
+}
+
+function card(it) {
+  const el = document.createElement('article');
+  el.className = 'card';
+  const h = document.createElement('h2'); h.textContent = it.n; el.append(h);
+  const sub = document.createElement('div'); sub.className = 'sub';
+  sub.textContent = [it.s || CATS[it.c], it.a, it.city !== 'Чиангмай' || !it.a ? it.city : null].filter(Boolean).join(' · ');
+  el.append(sub);
+  if (it.d) { const p = document.createElement('p'); p.textContent = it.d; el.append(p); }
+  const facts = [];
+  if (it.k === 'event' && it.r) facts.push(['Дата', it.ed && it.ed >= TODAY ? fmtDate(it.ed) + ', регулярно' : 'регулярно']);
+  else if (it.k === 'event' && it.ed) facts.push(['Дата', fmtDate(it.ed)]);
+  if (it.h) facts.push(['Время', it.h]);
+  if (it.p) facts.push(['Цена', it.p]);
+  if (facts.length) {
+    const ul = document.createElement('ul'); ul.className = 'facts';
+    for (const [k, v] of facts) {
+      const li = document.createElement('li'); const b = document.createElement('b');
+      b.textContent = k + ': '; li.append(b, v); ul.append(li);
+    }
+    el.append(ul);
+  }
+  if (it.ct && it.ct.length) {
+    const ul = document.createElement('ul'); ul.className = 'facts';
+    const li = document.createElement('li'); const b = document.createElement('b'); b.textContent = 'Контакты: ';
+    li.append(b);
+    it.ct.forEach((c, i) => { if (i) li.append(', '); li.append(contact(c)); });
+    ul.append(li); el.append(ul);
+  }
+  if (it.t && it.t.length) {
+    const tags = document.createElement('div'); tags.className = 'tags';
+    for (const t of it.t) {
+      const b = document.createElement('button'); b.className = 'tag'; b.type = 'button'; b.textContent = t;
+      b.onclick = () => { state.q = t; state.cat = ''; $('q').value = t; apply(); window.scrollTo(0, 0); };
+      tags.append(b);
+    }
+    el.append(tags);
+  }
+  const act = document.createElement('div'); act.className = 'actions';
+  if (it.m) act.append(anchor(it.m, 'На карте', true));
+  if (CHANNEL) act.append(anchor(`https://t.me/${CHANNEL}/${it.ids[0]}`, it.ids.length > 1 ? `Пост (ещё ${it.ids.length - 1})` : 'Пост', !it.m));
+  for (const u of it.l || []) act.append(anchor(u, linkLabel(u)));
+  if (act.children.length) el.append(act);
+  return el;
+}
+
+function more() {
+  const frag = document.createDocumentFragment();
+  for (const it of view.slice(shown, shown + PAGE)) frag.append(card(it));
+  shown = Math.min(view.length, shown + PAGE);
+  $('list').append(frag);
+}
+new IntersectionObserver(es => { if (es[0].isIntersecting && shown < view.length) more(); }, { rootMargin: '600px' }).observe($('more'));
+
+let timer;
+$('q').addEventListener('input', e => { clearTimeout(timer); timer = setTimeout(() => { state.q = e.target.value.trim(); apply(); }, 150); });
+$('city').addEventListener('change', e => { state.city = e.target.value; apply(); });
+$('past').addEventListener('change', e => { state.past = e.target.checked; apply(); });
+
+window.addEventListener('hashchange', () => {
+  readHash();
+  $('q').value = state.q; $('past').checked = state.past;
+  $('city').value = state.city; if ($('city').value !== state.city) state.city = '';
+  apply();
+});
+
+fetch('catalog.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(data => {
+  items = data.items;
+  const cities = {};
+  for (const it of items) {
+    it._name = norm(it.n);
+    it._key = norm([it.s, (it.t || []).join(' '), CATS[it.c]].join(' '));
+    it._hay = [it._name, it._key, norm(it.d), norm(it.a), norm(it.city)].join(' ');
+    cities[it.city] = (cities[it.city] || 0) + 1;
+  }
+  const sel = $('city');
+  sel.append(new Option('Все города', ''));
+  Object.entries(cities).filter(([, n]) => n >= 5).sort((a, b) => b[1] - a[1])
+    .forEach(([c, n]) => sel.append(new Option(`${c} (${n})`, c)));
+  readHash();
+  $('q').value = state.q; $('past').checked = state.past;
+  sel.value = state.city; if (sel.value !== state.city) state.city = '';
+  $('foot').textContent = `Записей: ${items.length}. По постам канала до ${fmtDate(data.built_from_posts_until)}.`;
+  apply();
+}).catch(() => {
+  const e = document.createElement('div'); e.className = 'empty';
+  e.textContent = 'Не удалось загрузить каталог. Обновите страницу.';
+  $('list').append(e);
+});
+</script>
+</body>
+</html>
