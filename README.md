@@ -2,9 +2,9 @@
 
 A searchable catalog of places, services, events and tips from the Telegram channel [«Мой Чиангмай»](https://t.me/my_chiangmai).
 
-Site: https://skirpichenko.github.io/my-chiang-mai/ (GitHub Pages, served from `docs/`).
+Site: https://skirpichenko.github.io/my-chiang-mai/, in English at https://skirpichenko.github.io/my-chiang-mai/en/ (GitHub Pages, served from `docs/`). Posts open right in the catalog, with no Telegram account or app needed.
 
-- `docs/` is the site. `docs/catalog.json` is generated, so never edit it by hand.
+- `docs/` is the site. `docs/catalog.json` and `docs/catalog.en.json` are generated, so never edit them by hand.
 - `tools/` is the pipeline that turns the channel's Telegram export into the catalog.
 - `work/` holds the export and the extraction results. It stays on the owner's computer and is never pushed, because the export includes contacts.
 

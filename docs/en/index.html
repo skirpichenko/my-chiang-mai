@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Chiang Mai — catalog</title>
+<meta name="description" content="Places, services, events and practical tips for Chiang Mai, from the Telegram channel My Chiang Mai.">
+<link rel="alternate" hreflang="ru" href="../">
+<link rel="stylesheet" href="../app.css">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="title">
+      <h1>My Chiang Mai — catalog</h1>
+      <a class="lang" id="lang" href="../" hreflang="ru" lang="ru">Русский</a>
+    </div>
+    <div class="search">
+      <input id="q" type="search" placeholder="Search: dentist, decaf, with kids…" autocomplete="off" aria-label="Search the catalog">
+      <select id="city" aria-label="City"></select>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Categories"></div>
+  </div>
+</header>
+<main class="wrap">
+  <div class="meta">
+    <span id="count" aria-live="polite"></span>
+    <label id="pastWrap" hidden><input type="checkbox" id="past"> past events</label>
+  </div>
+  <div id="list"></div>
+  <div id="more"></div>
+  <div class="foot" id="foot"></div>
+</main>
+<noscript><p class="wrap">The catalog needs JavaScript.</p></noscript>
+<script>window.SITE = { lang: 'en', data: '../catalog.en.json', other: '../' };</script>
+<script src="../app.js"></script>
+</body>
+</html>
