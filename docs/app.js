@@ -20,7 +20,7 @@ const STRINGS = {
     all: 'Все', allCities: 'Все города', found: n => `Найдено: ${n}`,
     empty: 'Ничего не найдено. Попробуйте другое слово или уберите фильтры.',
     link: 'Ссылка', date: 'Дата', regular: 'регулярно', hours: 'Время', price: 'Цена', contacts: 'Контакты',
-    map: 'На карте', post: 'Пост', postMore: n => `Пост (ещё ${n})`, hide: 'Скрыть пост',
+    map: 'На карте', mapN: n => `Карта ${n}`, post: 'Пост', postMore: n => `Пост (ещё ${n})`, hide: 'Скрыть пост',
     openTg: 'Открыть в Telegram', morePosts: n => `Ещё посты (${n})`, frameTitle: 'Пост канала',
     foot: (n, d) => `Записей: ${n}. По постам канала до ${d}.`,
     loadError: 'Не удалось загрузить каталог. Обновите страницу.',
@@ -40,7 +40,7 @@ const STRINGS = {
     all: 'All', allCities: 'All cities', found: n => `Found: ${n}`,
     empty: 'Nothing found. Try another word or clear the filters.',
     link: 'Link', date: 'Date', regular: 'regular', hours: 'Hours', price: 'Price', contacts: 'Contacts',
-    map: 'Map', post: 'Post', postMore: n => `Post (+${n} more)`, hide: 'Hide post',
+    map: 'Map', mapN: n => `Map ${n}`, post: 'Post', postMore: n => `Post (+${n} more)`, hide: 'Hide post',
     openTg: 'Open in Telegram', morePosts: n => `More posts (${n})`, frameTitle: 'Channel post',
     foot: (n, d) => `${n} entries, from the channel's posts up to ${d}.`,
     loadError: 'Could not load the catalog. Reload the page.',
@@ -176,6 +176,8 @@ function contact(c) {
 }
 
 // Posts open inside the card through Telegram's public post embed, which needs no Telegram account or app.
+const MAPS = /^https?:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|(www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)/;
+
 const postUrl = id => `https://t.me/${T.channel}/${id}`;
 function postFrame(id) {
   const dark = inTelegram ? tg.colorScheme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
@@ -273,8 +275,10 @@ function card(it) {
   // The post is the main action; the map is the main one only for an item without a post.
   const hasPost = !!(T.channel && it.ids && it.ids.length);
   if (hasPost) act.append(postButton(it, box));
-  if (it.m) act.append(anchor(it.m, T.map, !hasPost));
-  for (const u of it.l || []) act.append(anchor(u, linkLabel(u)));
+  // Routes and trips can have several map points: the main one is "Map", the others "Map 2", "Map 3".
+  const maps = [it.m, ...(it.l || []).filter(u => MAPS.test(u))].filter(Boolean);
+  maps.forEach((u, i) => act.append(anchor(u, i ? T.mapN(i + 1) : T.map, !hasPost && !i)));
+  for (const u of (it.l || []).filter(u => !MAPS.test(u))) act.append(anchor(u, linkLabel(u)));
   if (act.children.length) el.append(act);
   el.append(box);
   return el;
