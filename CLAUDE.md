@@ -32,7 +32,7 @@ A searchable catalog of the public Telegram channel «Мой Чиангмай» 
 - Every post belongs to its newest extraction. When an update re-extracts a post, older entries lose that post id, and an entry with no post ids left is dropped. Deleted posts drop out on their own.
 - `build` deduplicates entries:
   - events by name and date;
-  - places by map link plus a similar name;
+  - places by map link plus a similar name. Two different links that open the same Google place count as one link: `geo.py`'s `place_ids` reads the place's id from the link or from its redirect in `work/geo.json`. This merged about 300 duplicates on 2026-11-20 (5680 -> 5370 items). A link with no place id (a search, bare coordinates) or not resolved yet is compared as text;
   - anything else by kind, name and city.
 - Contacts (phones, @handles, emails) stay out of the public `catalog.json`. Build without `--contacts` unless the owner explicitly decides otherwise.
 

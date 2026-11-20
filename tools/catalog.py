@@ -271,6 +271,10 @@ def cmd_build(with_contacts, force):
             e['links'] = [clean_url(u) for u in e.get('links') or []]
             raw.append(e)
 
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import geo
+    place_of = geo.place_ids()
+
     groups = collections.OrderedDict()
     clusters = collections.defaultdict(list)
     for e in raw:
@@ -278,7 +282,8 @@ def cmd_build(with_contacts, force):
             key = ('e', norm_name(e['name']), e.get('event_date'))
         elif e['maps_url']:
             # Posts sometimes reuse one link for different places, so a link groups only similar names.
-            mk, c = maps_key(e['maps_url']), compact(e['name'])
+            # Different links that open the same Google place (tools/geo.py, place_ids) count as one link.
+            mk, c = place_of(e['maps_url']) or maps_key(e['maps_url']), compact(e['name'])
             rep = next((r for r in clusters[mk] if c in r or r in c), None)
             if rep is None:
                 rep = c
@@ -343,8 +348,6 @@ def cmd_build(with_contacts, force):
 
     old = load_json(CATALOG)['items'] if os.path.exists(CATALOG) else []
     # City regions (tools/geo.py): each item's `z`, from its map link's address, the district borders or its area text.
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    import geo
     geo.report(catalog)
     save_json(CATALOG, {'built_from_posts_until': max(post_date.values()), 'items': catalog})
 

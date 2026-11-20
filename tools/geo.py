@@ -337,6 +337,22 @@ def parse_maps(url):
             'search': '/maps/search' in path or 'query' in q}
 
 
+PLACE_RE = re.compile(r'(?:ftid=|!1s)(0x[0-9a-f]+:0x[0-9a-f]+)', re.I)
+
+
+def place_ids():
+    """A function: map link -> the Google place it opens (its feature id), read from the link itself or from its
+    redirect in work/geo.json; None when the link names no place (a search, bare coordinates) or is not resolved yet.
+    `catalog.py build` uses it so that two different links to one place count as one link."""
+    cache = load_json(CACHE)['links'] if os.path.exists(CACHE) else {}
+
+    def place_of(url):
+        loc = (cache.get(url) or {}).get('to') if is_short(url) else url
+        m = PLACE_RE.search(urllib.parse.unquote(loc or ''))
+        return 'place:' + m[1].lower() if m else None
+    return place_of
+
+
 def norm(s):
     return ' ' + re.sub(r'[\s,;/()]+', ' ', (s or '').lower().replace('ё', 'е')) + ' '
 
