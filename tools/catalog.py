@@ -20,6 +20,7 @@ CHUNKS = os.path.join(WORK, 'chunks')
 OUT = os.path.join(WORK, 'out')
 INC = os.path.join(WORK, 'inc')
 CATALOG = os.path.join(ROOT, 'docs', 'catalog.json')
+PLACES = os.path.join(WORK, 'places.json')   # Google place ids, from the private channel-tools repo's map tool
 PART_CHARS, PARTS_PER_CHUNK = 41000, 4
 
 CATEGORIES = ['food_cafe', 'food_restaurant', 'food_bar', 'food_bakery', 'food_products',
@@ -342,11 +343,23 @@ def cmd_build(with_contacts, force):
             item['ct'] = union(es, 'contacts')[:6]
         catalog.append({k: v for k, v in item.items() if v not in (None, [], '', False)})
 
+    # The site's map: each item's Google place id as `g`, keyed by its map link or, without one, by name and city.
+    # The private channel-tools repo finds them (tools/map_points.py); its points file has their coordinates.
+    places = load_json(PLACES) if os.path.exists(PLACES) else {}
+    if not places:
+        print('WARNING: work/places.json is missing or empty, so no item gets a place id (g) and the site map shows '
+              'nothing. It comes from the private channel-tools repo (tools/map_points.py).')
+    for item in catalog:
+        p = places.get(item['m'] if item.get('m') else f"n:{item['n']}|{item['city']}")
+        if p and p.get('id'):
+            item['g'] = p['id']
+
     catalog.sort(key=lambda x: x['last'], reverse=True)
     for i, item in enumerate(catalog):
         item['id'] = i
 
     old = load_json(CATALOG)['items'] if os.path.exists(CATALOG) else []
+    print('items with a place id (g):', sum(1 for i in old if i.get('g')), '->', sum(1 for i in catalog if i.get('g')))
     # City regions (tools/geo.py): each item's `z`, from its map link's address, the district borders or its area text.
     geo.report(catalog)
     save_json(CATALOG, {'built_from_posts_until': max(post_date.values()), 'items': catalog})
